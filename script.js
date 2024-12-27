@@ -34,7 +34,7 @@ document.getElementById('image-upload').addEventListener('change', function(even
 async function predictImage() {
   if (modelLoading) {
     console.log('Waiting for the model to load...');
-    document.getElementById('result').innerText = 'Модель все ще завантажується+-...';
+    document.getElementById('result').innerText = 'Модель все ще завантажується...';
     return;
   }
 
