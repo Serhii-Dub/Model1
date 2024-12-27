@@ -1,87 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Image Recognition with MobileNet</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; text-align: center; background-color: #f0f0f0; }
-    #image-container { margin: 20px; }
-    #file-input, #load-model-button { padding: 10px; }
-    #result { margin-top: 20px; font-size: 20px; font-weight: bold; }
-    #loading-message { margin-top: 20px; font-size: 18px; color: gray; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResNet Image Recognition</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 </head>
 <body>
+    <h1>ResNet Image Recognition</h1>
 
-<h1>Image Recognition with MobileNet</h1>
+    <!-- Кнопка для завантаження моделі -->
+    <button id="loadModelBtn">Load Model</button>
+    <p id="modelStatus">Model not loaded</p>
 
-<!-- Кнопка для завантаження моделі -->
-<button id="load-model-button">Завантажити модель</button>
-<div id="loading-message"></div>
+    <!-- Кнопка для завантаження зображення -->
+    <input type="file" id="uploadImage" accept="image/*" disabled />
+    <p id="result">No results yet</p>
 
-<!-- Кнопка для завантаження зображення (спочатку неактивна) -->
-<input type="file" id="file-input" accept="image/*" disabled />
-<div id="image-container">
-  <img id="image" src="" alt="Image" width="300px" />
-</div>
+    <script>
+        let model;
 
-<!-- Показ результатів -->
-<div id="result">Завантажте зображення для аналізу</div>
+        // Завантаження моделі
+        document.getElementById('loadModelBtn').addEventListener('click', async () => {
+            try {
+                model = await tf.loadLayersModel('./model99.h5');
+                document.getElementById('modelStatus').textContent = 'Model loaded successfully';
+                document.getElementById('uploadImage').disabled = false;
+            } catch (error) {
+                document.getElementById('modelStatus').textContent = 'Error loading model';
+                console.error(error);
+            }
+        });
 
-<script>
-  let model;
-  let isModelLoaded = false;
+        // Обробка зображення та розпізнавання
+        document.getElementById('uploadImage').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
 
-  // Завантаження попередньо натренованої моделі MobileNet
-  async function loadModel() {
-    document.getElementById('loading-message').textContent = "Завантаження моделі...";
-    try {
-      // Завантажуємо модель MobileNet з TensorFlow.js CDN
-      model = await tf.loadGraphModel('https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.0.0/mobilenet/model.json');
-      console.log("Model Loaded");
-      isModelLoaded = true;
-      document.getElementById('loading-message').textContent = "Модель завантажено! Тепер завантажте зображення.";
-      document.getElementById('file-input').disabled = false;  // Активуємо кнопку завантаження зображення
-    } catch (error) {
-      console.error("Помилка завантаження моделі:", error);
-      document.getElementById('loading-message').textContent = "Помилка завантаження моделі. Спробуйте ще раз.";
-    }
-  }
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.onload = async () => {
+                const tensor = tf.browser.fromPixels(img)
+                    .resizeNearestNeighbor([224, 224]) // Зміна розміру до 224x224
+                    .toFloat()
+                    .expandDims();
 
-  // Обробка завантаженого зображення
-  document.getElementById('file-input').addEventListener('change', handleImage, false);
+                const predictions = model.predict(tensor);
+                const topPrediction = predictions.argMax(-1).dataSync()[0];
 
-  async function handleImage(event) {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-    
-    reader.onload = async function(e) {
-      const img = new Image();
-      img.onload = async function() {
-        document.getElementById('image').src = img.src;
-        const tensor = tf.browser.fromPixels(img).toFloat();
-        const resizedTensor = tf.image.resizeBilinear(tensor, [224, 224]).expandDims(0).div(tf.scalar(255));
-
-        // Виконання передбачення
-        const predictions = await model.predict(resizedTensor).data();
-        
-        // Знаходимо найімовірніше передбачення
-        const topPredictionIndex = predictions.indexOf(Math.max(...predictions));
-        
-        // Додаємо результат в інтерфейс
-        document.getElementById('result').textContent = `Тип фото: ${topPredictionIndex} (Ймовірність: ${(predictions[topPredictionIndex] * 100).toFixed(2)}%)`;
-      };
-      img.src = e.target.result;
-    };
-    
-    reader.readAsDataURL(file);
-  }
-
-  // Обробка натискання кнопки "Завантажити модель"
-  document.getElementById('load-model-button').addEventListener('click', loadModel);
-</script>
-
+                document.getElementById('result').textContent = `Prediction: ${topPrediction}`;
+            };
+        });
+    </script>
 </body>
 </html>
