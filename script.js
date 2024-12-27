@@ -1,15 +1,63 @@
 let model;
 
-// Завантаження моделі MobileNet
+// Завантаження моделі
 async function loadModel() {
     try {
-        model = await mobilenet.load();
-        console.log('Модель успішно завантажена');
+        model = await tf.loadLayersModel('model/model.json');
+        console.log('Модель успішно завантажена:', model);
+
+        // Вивід інформації про шари моделі
+        model.layers.forEach((layer, index) => {
+            console.log(`Шар ${index}:`, layer.name, layer.getConfig());
+        });
+
+        // Вивід вхідної форми
+        console.log('Вхідна форма моделі:', model.inputs[0].shape);
+
+        document.getElementById('result').innerText = 'Модель готова до використання!';
         document.getElementById('predict-button').disabled = false;
-        document.getElementById('result').innerText = 'Модель готова до прогнозування!';
     } catch (error) {
         console.error('Помилка завантаження моделі:', error);
         document.getElementById('result').innerText = 'Помилка завантаження моделі!';
+    }
+}
+
+// Підготовка зображення
+function preprocessImage(imageElement) {
+    console.log('Початкова форма зображення:', imageElement.width, imageElement.height);
+
+    const tensor = tf.browser.fromPixels(imageElement)
+        .resizeNearestNeighbor([224, 224]) // Зміна розміру зображення
+        .toFloat()
+        .div(255.0) // Нормалізація до [0, 1]
+        .expandDims(0); // Додаємо batch dimension
+
+    console.log('Форма попередньо обробленого тензора:', tensor.shape);
+    return tensor;
+}
+
+// Прогнозування
+async function predictImage() {
+    if (!model) {
+        document.getElementById('result').innerText = 'Модель не завантажена!';
+        return;
+    }
+
+    const imageElement = document.getElementById('image-preview');
+    const preprocessedImage = preprocessImage(imageElement);
+
+    try {
+        const predictions = model.predict(preprocessedImage);
+        console.log('Сирі результати прогнозу:', predictions);
+
+        const predictionsArray = predictions.arraySync();
+        console.log('Масив прогнозів:', predictionsArray);
+
+        const maxIndex = predictionsArray[0].indexOf(Math.max(...predictionsArray[0]));
+        document.getElementById('result').innerText = `Найвірогідніше: Клас ${maxIndex} (Ймовірність: ${(predictionsArray[0][maxIndex] * 100).toFixed(2)}%)`;
+    } catch (error) {
+        console.error('Помилка прогнозування:', error);
+        document.getElementById('result').innerText = 'Помилка прогнозування!';
     }
 }
 
@@ -21,30 +69,10 @@ document.getElementById('image-upload').addEventListener('change', function(even
         reader.onload = function(e) {
             const image = document.getElementById('image-preview');
             image.src = e.target.result;
-            document.getElementById('predict-button').disabled = false;
         };
         reader.readAsDataURL(file);
     }
 });
 
-// Прогнозування
-document.getElementById('predict-button').addEventListener('click', async function() {
-    const imageElement = document.getElementById('image-preview');
-    
-    if (!model) {
-        document.getElementById('result').innerText = 'Модель не завантажена!';
-        return;
-    }
-
-    try {
-        const predictions = await model.classify(imageElement);
-        console.log('Результати прогнозу:', predictions);
-        document.getElementById('result').innerText = `Найвірогідніше: ${predictions[0].className} (${(predictions[0].probability * 100).toFixed(2)}%)`;
-    } catch (error) {
-        console.error('Помилка прогнозування:', error);
-        document.getElementById('result').innerText = 'Помилка прогнозування!';
-    }
-});
-
-// Завантажуємо модель при завантаженні сторінки
+// Завантаження моделі при запуску сторінки
 window.onload = loadModel;
