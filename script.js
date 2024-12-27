@@ -5,7 +5,7 @@ let modelLoading = true;  // Змінна для перевірки, чи мод
 async function loadModel() {
   try {
     // Завантажуємо модель ResNet50 через TensorFlow.js, використовуючи tf.loadLayersModel()
-    model = await tf.loadLayersModel('https://serhii-dub.github.io/your-repository-name/resnet50_tfjs_model/model.json');
+    model = await tf.loadLayersModel('https://serhii-dub.github.io/Model1/resnet50_tfjs_model/model.json');
     console.log('Model Loaded');
     modelLoading = false;  // Модель завантажена
     document.getElementById('predict-button').disabled = false; // Дозволяємо передбачення
