@@ -1,12 +1,17 @@
 let model;
+let modelLoading = true;  // Змінна для перевірки, чи модель завантажена
 
 // Завантаження моделі
 async function loadModel() {
   try {
     model = await tf.loadGraphModel('resnet50_tfjs_model/model.json');
     console.log('Model Loaded');
+    modelLoading = false;  // Модель завантажена
+    document.getElementById('predict-button').disabled = false; // Дозволяємо передбачення
+    document.getElementById('result').innerText = 'Model is ready to predict!';
   } catch (error) {
     console.error('Error loading model:', error);
+    document.getElementById('result').innerText = 'Error loading model!';
   }
 }
 
@@ -26,8 +31,15 @@ document.getElementById('image-upload').addEventListener('change', function(even
 
 // Прогнозування зображення
 async function predictImage() {
+  if (modelLoading) {
+    console.log('Waiting for the model to load...');
+    document.getElementById('result').innerText = 'Model is still loading...';
+    return;
+  }
+
   if (!model) {
     console.error('Model is not loaded yet!');
+    document.getElementById('result').innerText = 'Model failed to load!';
     return;
   }
 
@@ -39,17 +51,18 @@ async function predictImage() {
     .div(tf.scalar(255));
 
   try {
-    // Отримуємо предсказання
+    // Отримуємо передбачення
     const predictions = await model.predict(imageTensor);
     const topClass = predictions.arraySync()[0];
     
-    // Тільки для моделів ImageNet, можна замінити цей код на клас під ваші потреби
+    // Тільки для моделей ImageNet, можна замінити цей код на ваші класи
     const predictedLabel = topClass.indexOf(Math.max(...topClass));
 
     // Показуємо результат
     document.getElementById('result').innerText = `Predicted Class: ${predictedLabel}`;
   } catch (error) {
     console.error('Prediction error:', error);
+    document.getElementById('result').innerText = 'Prediction failed!';
   }
 }
 
