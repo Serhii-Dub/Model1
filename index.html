@@ -1,68 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ResNet Image Recognition</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Recognition with ResNet</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 </head>
 <body>
-    <div class="container mt-5">
-        <h1 class="text-center">ResNet Image Recognition</h1>
-        <p class="text-center">Upload an image to see predictions from the model.</p>
 
-        <form id="upload-form" enctype="multipart/form-data">
-            <div class="mb-3">
-                <label for="file" class="form-label">Choose an image:</label>
-                <input type="file" id="file" name="file" class="form-control" required>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Submit</button>
-        </form>
-
-        <div id="result" class="mt-4 text-center" style="display: none;">
-            <h2>Prediction</h2>
-            <p id="result-text"></p>
-        </div>
+  <div class="container">
+    <h1>Image Recognition with ResNet</h1>
+    
+    <!-- Input для завантаження зображення -->
+    <input type="file" id="image-upload" accept="image/*">
+    <div id="image-container">
+      <img id="image-preview" src="" alt="Image Preview">
     </div>
 
-    <script>
-        const form = document.getElementById('upload-form');
-        const resultDiv = document.getElementById('result');
-        const resultText = document.getElementById('result-text');
+    <!-- Кнопка для передбачення -->
+    <button id="predict-button" onclick="predictImage()" disabled>Predict</button>
 
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
+    <!-- Результат -->
+    <div id="result"></div>
+  </div>
 
-            const formData = new FormData();
-            const fileInput = document.getElementById('file');
-
-            if (fileInput.files.length === 0) {
-                alert('Please select a file!');
-                return;
-            }
-
-            formData.append('file', fileInput.files[0]);
-
-            try {
-                const response = await fetch('/predict', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error('Error during prediction');
-                }
-
-                const data = await response.json();
-
-                resultText.textContent = `Result: ${data.result} \n Confidence: ${(data.confidence * 100).toFixed(2)}%`;
-                resultDiv.style.display = 'block';
-            } catch (error) {
-                resultText.textContent = 'An error occurred. Please try again.';
-                resultDiv.style.display = 'block';
-            }
-        });
-    </script>
-
+  <script src="script.js"></script>
 </body>
 </html>
