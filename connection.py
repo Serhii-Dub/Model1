@@ -32,6 +32,9 @@ if not os.path.exists(os.path.join(local_path, ".git")):
 
 repo = Repo(local_path)
 
+# Переведення на гілку main
+repo.git.branch("-M", "main")
+
 # Додавання віддаленого репозиторію
 if "origin" not in [remote.name for remote in repo.remotes]:
     print("Додавання віддаленого репозиторію...")
@@ -40,6 +43,11 @@ if "origin" not in [remote.name for remote in repo.remotes]:
 # Додавання всіх файлів у список
 print("Додавання файлів до репозиторію...")
 repo.git.add(A=True)
+
+# Перевірка наявності комітів
+if not repo.head.is_valid():
+    print("Ініціалізація репозиторію: створення початкового коміту...")
+    repo.index.commit(commit_message)
 
 # Створення коміту
 print("Створення коміту...")
