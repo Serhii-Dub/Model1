@@ -1,30 +1,18 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Завантаження та прогнозування зображень з ResNet50</title>
-    <link rel="stylesheet" href="style.css">
+    <title>ResNet50 TFJS</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Завантажте зображення для прогнозування</h1>
-        
-        <!-- Завантаження зображення -->
-        <input type="file" id="image-upload" accept="image/*">
-        
-        <div id="image-container">
-            <img id="image-preview" src="" alt="Зображення для прогнозування" />
-        </div>
-        
-        <!-- Кнопка прогнозування -->
-        <button id="predict-button" disabled onclick="predictImage()">Прогнозувати</button>
-        
-        <!-- Місце для результатів -->
-        <div id="result">Модель завантажується...</div>
-    </div>
+    <h1>Завантаження та прогнозування моделі ResNet50</h1>
 
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <input type="file" id="file-input" accept="image/*">
+    <img id="input-image" style="max-width: 100%; display: none;">
+    <button onclick="predict()">Прогнозувати</button>
+
     <script src="script.js"></script>
 </body>
 </html>

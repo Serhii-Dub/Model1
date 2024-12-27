@@ -1,34 +1,49 @@
 // Завантаження моделі
 async function loadModel() {
     try {
-        // Завантажуємо модель ResNet50
-        console.log("Завантаження моделі...");
-        const model = await tf.loadLayersModel('resnet50_tfjs_model/model.json');
+        model = await tf.loadLayersModel('https://serhii-dub.github.io/Model1/resnet50_tfjs_model/model.json');
+        console.log("Модель завантажена!");
 
-        // Перевірка форми входу і налаштування
-        if (!model.inputs || !model.inputs[0].shape) {
-            console.log("Форма входу не вказана, задаємо її вручну...");
-            model.build([null, 224, 224, 3]); // Встановлюємо вхідну форму для ResNet50
+        // Перевірка вхідних даних
+        const inputLayer = model.input;
+        console.log('Модель має вхідний шар:', inputLayer);
+
+        // Якщо модель не має визначеного вхідного шару, намагаємось додати його вручну
+        if (!inputLayer) {
+            console.error("Модель не має визначеного вхідного шару.");
         }
 
-        console.log('Модель успішно завантажена:', model);
+        // Якщо вхідний шар є, можна продовжити з прогнозами
+        const inputShape = model.inputShape || [null, null, 3];  // припускаємо, що модель має 3 канали (RGB)
+        console.log('Input Shape:', inputShape);
 
-        // Виводимо інформацію про шари моделі
-        model.layers.forEach((layer, index) => {
-            console.log(`Шар ${index}:`, layer.name, layer.getConfig());
-        });
-
-        // Виводимо вхідну форму
-        console.log('Вхідна форма моделі:', model.inputs[0].shape);
-
-        // Оновлення тексту на сторінці
-        document.getElementById('result').innerText = 'Модель готова до використання!';
-        document.getElementById('predict-button').disabled = false;
     } catch (error) {
         console.error('Помилка завантаження моделі:', error);
-        document.getElementById('result').innerText = 'Помилка завантаження моделі!';
     }
 }
 
-// Завантажуємо модель при завантаженні сторінки
-window.onload = loadModel;
+// Викликаємо функцію завантаження
+loadModel();
+
+
+async function predict() {
+    const imageElement = document.getElementById('input-image'); // Ваше зображення
+    if (!imageElement) {
+        console.error('Зображення не знайдено!');
+        return;
+    }
+    
+    // Попередня обробка зображення: зміна розміру до 224x224 і нормалізація
+    const processedImage = tf.browser.fromPixels(imageElement)
+        .resizeNearestNeighbor([224, 224])  // змінюємо розмір до 224x224
+        .toFloat()                         // перетворюємо на float
+        .expandDims(0);                     // додаємо вимір для пакету (batch size)
+
+    // Прогнозування
+    try {
+        const prediction = await model.predict(processedImage);
+        prediction.print(); // Виведення результату прогнозу в консоль
+    } catch (error) {
+        console.error('Помилка при прогнозуванні:', error);
+    }
+}
