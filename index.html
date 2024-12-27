@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Image Recognition with ResNet50</title>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-node"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; text-align: center; background-color: #f0f0f0; }
     #image-container { margin: 20px; }
@@ -23,14 +24,14 @@
 </div>
 
 <!-- Показ результатів -->
-<div id="result"></div>
+<div id="result">Завантажте зображення для аналізу</div>
 
 <script>
   let model;
 
   // Завантаження попередньо натренованої моделі ResNet50 в TensorFlow.js
   async function loadModel() {
-    model = await tf.loadGraphModel('https://tfhub.dev/google/imagenet/resnet_v2_50/classification/4'); // Посилання на модель
+    model = await tf.loadGraphModel('https://tfhub.dev/google/imagenet/resnet_v2_50/classification/4'); // Завантажуємо модель
     console.log("Model Loaded");
   }
 
@@ -47,9 +48,15 @@
         document.getElementById('image').src = img.src;
         const tensor = tf.browser.fromPixels(img).toFloat();
         const resizedTensor = tf.image.resizeBilinear(tensor, [224, 224]).expandDims(0).div(tf.scalar(255));
+        
+        // Виконання передбачення
         const predictions = await model.predict(resizedTensor).data();
-        const topPrediction = predictions.indexOf(Math.max(...predictions));
-        document.getElementById('result').textContent = `Predicted Class: ${topPrediction}`;
+        
+        // Знаходимо найімовірніше передбачення
+        const topPredictionIndex = predictions.indexOf(Math.max(...predictions));
+        
+        // Додаємо результат в інтерфейс
+        document.getElementById('result').textContent = `Найбільш ймовірний клас: ${topPredictionIndex} (Ймовірність: ${(predictions[topPredictionIndex] * 100).toFixed(2)}%)`;
       };
       img.src = e.target.result;
     };
