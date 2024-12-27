@@ -5,20 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Image Recognition with ResNet50</title>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-node"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; text-align: center; background-color: #f0f0f0; }
     #image-container { margin: 20px; }
-    #file-input { padding: 10px; }
+    #file-input, #load-model-button { padding: 10px; }
     #result { margin-top: 20px; font-size: 20px; font-weight: bold; }
+    #loading-message { margin-top: 20px; font-size: 18px; color: gray; }
   </style>
 </head>
 <body>
 
 <h1>Image Recognition with ResNet50</h1>
 
-<!-- Кнопка для завантаження зображення -->
-<input type="file" id="file-input" accept="image/*" />
+<!-- Кнопка для завантаження моделі -->
+<button id="load-model-button">Завантажити модель</button>
+<div id="loading-message"></div>
+
+<!-- Кнопка для завантаження зображення (спочатку неактивна) -->
+<input type="file" id="file-input" accept="image/*" disabled />
 <div id="image-container">
   <img id="image" src="" alt="Image" width="300px" />
 </div>
@@ -28,11 +32,21 @@
 
 <script>
   let model;
+  let isModelLoaded = false;
 
-  // Завантаження попередньо натренованої моделі ResNet50 в TensorFlow.js
+  // Завантаження попередньо натренованої моделі ResNet50
   async function loadModel() {
-    model = await tf.loadGraphModel('https://tfhub.dev/google/imagenet/resnet_v2_50/classification/4'); // Завантажуємо модель
-    console.log("Model Loaded");
+    document.getElementById('loading-message').textContent = "Завантаження моделі...";
+    try {
+      model = await tf.loadGraphModel('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/node_modules/@tensorflow/tfjs-converter/dist/tfjs_graph_model/resnet_v2_50/classification/1/model.json');
+      console.log("Model Loaded");
+      isModelLoaded = true;
+      document.getElementById('loading-message').textContent = "Модель завантажено! Тепер завантажте зображення.";
+      document.getElementById('file-input').disabled = false;  // Активуємо кнопку завантаження зображення
+    } catch (error) {
+      console.error("Помилка завантаження моделі:", error);
+      document.getElementById('loading-message').textContent = "Помилка завантаження моделі. Спробуйте ще раз.";
+    }
   }
 
   // Обробка завантаженого зображення
@@ -48,7 +62,7 @@
         document.getElementById('image').src = img.src;
         const tensor = tf.browser.fromPixels(img).toFloat();
         const resizedTensor = tf.image.resizeBilinear(tensor, [224, 224]).expandDims(0).div(tf.scalar(255));
-        
+
         // Виконання передбачення
         const predictions = await model.predict(resizedTensor).data();
         
@@ -56,7 +70,7 @@
         const topPredictionIndex = predictions.indexOf(Math.max(...predictions));
         
         // Додаємо результат в інтерфейс
-        document.getElementById('result').textContent = `Найбільш ймовірний клас: ${topPredictionIndex} (Ймовірність: ${(predictions[topPredictionIndex] * 100).toFixed(2)}%)`;
+        document.getElementById('result').textContent = `Тип фото: ${topPredictionIndex} (Ймовірність: ${(predictions[topPredictionIndex] * 100).toFixed(2)}%)`;
       };
       img.src = e.target.result;
     };
@@ -64,7 +78,8 @@
     reader.readAsDataURL(file);
   }
 
-  loadModel(); // Завантажуємо модель при старті
+  // Обробка натискання кнопки "Завантажити модель"
+  document.getElementById('load-model-button').addEventListener('click', loadModel);
 </script>
 
 </body>
