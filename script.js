@@ -4,14 +4,15 @@ let modelLoading = true;  // Змінна для перевірки, чи мод
 // Завантаження моделі
 async function loadModel() {
   try {
-    model = await tf.loadGraphModel('resnet50_tfjs_model/model.json');
+    // Завантажуємо модель ResNet50 через TensorFlow.js
+    model = await tf.loadGraphModel('https://your-github-username.github.io/your-repository-name/resnet50_tfjs_model/model.json');
     console.log('Model Loaded');
     modelLoading = false;  // Модель завантажена
     document.getElementById('predict-button').disabled = false; // Дозволяємо передбачення
-    document.getElementById('result').innerText = 'Model is ready to predict!';
+    document.getElementById('result').innerText = 'Модель готова до прогнозування!';
   } catch (error) {
     console.error('Error loading model:', error);
-    document.getElementById('result').innerText = 'Error loading model!';
+    document.getElementById('result').innerText = 'Помилка завантаження моделі!';
   }
 }
 
@@ -33,13 +34,13 @@ document.getElementById('image-upload').addEventListener('change', function(even
 async function predictImage() {
   if (modelLoading) {
     console.log('Waiting for the model to load...');
-    document.getElementById('result').innerText = 'Model is still loading...';
+    document.getElementById('result').innerText = 'Модель все ще завантажується...';
     return;
   }
 
   if (!model) {
     console.error('Model is not loaded yet!');
-    document.getElementById('result').innerText = 'Model failed to load!';
+    document.getElementById('result').innerText = 'Модель не завантажена!';
     return;
   }
 
@@ -59,10 +60,10 @@ async function predictImage() {
     const predictedLabel = topClass.indexOf(Math.max(...topClass));
 
     // Показуємо результат
-    document.getElementById('result').innerText = `Predicted Class: ${predictedLabel}`;
+    document.getElementById('result').innerText = `Передбачена категорія: ${predictedLabel}`;
   } catch (error) {
     console.error('Prediction error:', error);
-    document.getElementById('result').innerText = 'Prediction failed!';
+    document.getElementById('result').innerText = 'Помилка при прогнозуванні!';
   }
 }
 
