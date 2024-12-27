@@ -3,7 +3,7 @@ let model;
 // Завантаження моделі
 async function loadModel() {
     try {
-        model = await tf.loadLayersModel(resnet50_tfjs_model/model.json');
+        model = await tf.loadLayersModel('resnet50_tfjs_model/model.json');
         console.log('Модель успішно завантажена:', model);
 
         // Вивід інформації про шари моделі
