@@ -1,2 +1,0 @@
-python connection.py
-pause
