@@ -1,42 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Recognition with ResNet</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-        input[type="file"] {
-            padding: 10px;
-            margin-top: 20px;
-        }
-        img {
-            max-width: 300px;
-            margin-top: 20px;
-        }
-        .prediction {
-            font-size: 20px;
-            margin-top: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Recognition with ResNet50</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; text-align: center; background-color: #f0f0f0; }
+    #image-container { margin: 20px; }
+    #file-input { padding: 10px; }
+    #result { margin-top: 20px; font-size: 20px; font-weight: bold; }
+  </style>
 </head>
 <body>
-    <h1>Upload an Image for Recognition</h1>
 
-    <form method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept="image/*">
-        <button type="submit">Upload</button>
-    </form>
+<h1>Image Recognition with ResNet50</h1>
 
-    {% if prediction is not none %}
-        <div class="prediction">
-            <p>Prediction: {{ prediction }}</p>
-            <img src="{{ image_url }}" alt="Uploaded Image">
-        </div>
-    {% endif %}
+<!-- Кнопка для завантаження зображення -->
+<input type="file" id="file-input" accept="image/*" />
+<div id="image-container">
+  <img id="image" src="" alt="Image" width="300px" />
+</div>
+
+<!-- Показ результатів -->
+<div id="result"></div>
+
+<script>
+  let model;
+
+  // Завантаження попередньо натренованої моделі ResNet50 в TensorFlow.js
+  async function loadModel() {
+    model = await tf.loadGraphModel('https://tfhub.dev/google/imagenet/resnet_v2_50/classification/4'); // Посилання на модель
+    console.log("Model Loaded");
+  }
+
+  // Обробка завантаженого зображення
+  document.getElementById('file-input').addEventListener('change', handleImage, false);
+
+  async function handleImage(event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = async function(e) {
+      const img = new Image();
+      img.onload = async function() {
+        document.getElementById('image').src = img.src;
+        const tensor = tf.browser.fromPixels(img).toFloat();
+        const resizedTensor = tf.image.resizeBilinear(tensor, [224, 224]).expandDims(0).div(tf.scalar(255));
+        const predictions = await model.predict(resizedTensor).data();
+        const topPrediction = predictions.indexOf(Math.max(...predictions));
+        document.getElementById('result').textContent = `Predicted Class: ${topPrediction}`;
+      };
+      img.src = e.target.result;
+    };
+    
+    reader.readAsDataURL(file);
+  }
+
+  loadModel(); // Завантажуємо модель при старті
+</script>
+
 </body>
 </html>

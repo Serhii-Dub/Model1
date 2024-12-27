@@ -1,65 +1,30 @@
-import os
-import torch
-import torchvision
-import torchvision.transforms as transforms
-from flask import Flask, render_template, request, redirect, url_for
-from werkzeug.utils import secure_filename
-from PIL import Image
-import io
+import tensorflow as tf
+import numpy as np
+from tensorflow.keras.preprocessing import image
+from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input, decode_predictions
 
-# Налаштування
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = './uploads'
-app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg'}
+# Завантажуємо попередньо натреновану модель ResNet50
+model = ResNet50(weights='imagenet')
 
-# Завантаження попередньо навченого ResNet
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# Завантажуємо зображення
+img_path = 'path_to_image.jpg'  # Вкажіть шлях до зображення
+img = image.load_img(img_path, target_size=(224, 224))
 
-model = torchvision.models.resnet18(pretrained=True)
-model.fc = torch.nn.Linear(model.fc.in_features, 1000)  # Стандартна кількість класів ImageNet
-model.load_state_dict(torch.load('resnet_model.pth'))
-model.eval().to(device)
+# Перетворюємо зображення в тензор
+img_array = image.img_to_array(img)
 
-# Трансформація зображень
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-])
+# Додаємо розмірність, необхідну для моделі
+img_array = np.expand_dims(img_array, axis=0)
 
-# Перевірка розширення файлу
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+# Попередня обробка зображення для ResNet50
+img_array = preprocess_input(img_array)
 
-# Обробка зображень і прогнозування
-def predict_image(image):
-    image = Image.open(io.BytesIO(image))
-    image = transform(image).unsqueeze(0).to(device)
-    with torch.no_grad():
-        outputs = model(image)
-    _, predicted = torch.max(outputs, 1)
-    return predicted.item()
+# Передбачення
+predictions = model.predict(img_array)
 
-# Головна сторінка
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            return redirect(request.url)
-        file = request.files['file']
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
+# Розшифровка результатів (отримуємо назви класів)
+decoded_predictions = decode_predictions(predictions, top=3)[0]
 
-            # Прогнозування
-            with open(filepath, 'rb') as f:
-                img_data = f.read()
-                prediction = predict_image(img_data)
-
-            return render_template('index.html', prediction=prediction, image_url=filepath)
-
-    return render_template('index.html')
-
-if __name__ == '__main__':
-    app.run(debug=True)
+# Виводимо топ-3 передбачення
+for i, (imagenet_id, label, score) in enumerate(decoded_predictions):
+    print(f"{i+1}: {label} ({score:.2f})")
