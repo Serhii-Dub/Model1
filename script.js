@@ -3,16 +3,22 @@ let model;
 // Завантаження моделі
 async function loadModel() {
     try {
-        // Завантажуємо модель
+        // Завантаження моделі
         model = await tf.loadLayersModel('resnet50_tfjs_model/model.json');
         console.log('Модель успішно завантажена:', model);
 
-        // Перевірка конфігурації першого шару
-        const inputLayer = model.layers[0];
-        console.log('Конфігурація першого шару:', inputLayer.getConfig());
+        // Перевірка входу моделі і встановлення форми
+        const inputShape = model.inputs[0].shape;
+        if (inputShape[1] !== 224 || inputShape[2] !== 224 || inputShape[3] !== 3) {
+            console.error('Невідповідний розмір вхідного зображення, очікується 224x224x3');
+            document.getElementById('result').innerText = 'Невідповідний розмір зображення!';
+            return;
+        }
 
-        // Вивід вхідної форми
-        console.log('Вхідна форма моделі:', model.inputs[0].shape);
+        // Виведення інформації про шари моделі
+        model.layers.forEach((layer, index) => {
+            console.log(`Шар ${index}:`, layer.name, layer.getConfig());
+        });
 
         document.getElementById('result').innerText = 'Модель готова до використання!';
         document.getElementById('predict-button').disabled = false;
@@ -22,17 +28,18 @@ async function loadModel() {
     }
 }
 
-// Підготовка зображення
+// Підготовка зображення для моделі
 function preprocessImage(imageElement) {
     console.log('Початкова форма зображення:', imageElement.width, imageElement.height);
 
+    // Обробка зображення: зміна розміру та нормалізація
     const tensor = tf.browser.fromPixels(imageElement)
-        .resizeNearestNeighbor([224, 224]) // Зміна розміру зображення
-        .toFloat()
-        .div(255.0) // Нормалізація до [0, 1]
-        .expandDims(0); // Додаємо batch dimension
+        .resizeNearestNeighbor([224, 224])  // Зміна розміру до 224x224
+        .toFloat()  // Перетворення в float
+        .div(255.0)  // Нормалізація
+        .expandDims(0);  // Додавання batch dimension (обробка одного зображення)
 
-    console.log('Форма попередньо обробленого тензора:', tensor.shape);
+    console.log('Форма попередньо обробленого зображення:', tensor.shape);
     return tensor;
 }
 
@@ -47,12 +54,14 @@ async function predictImage() {
     const preprocessedImage = preprocessImage(imageElement);
 
     try {
+        // Прогнозування
         const predictions = model.predict(preprocessedImage);
         console.log('Сирі результати прогнозу:', predictions);
 
         const predictionsArray = predictions.arraySync();
         console.log('Масив прогнозів:', predictionsArray);
 
+        // Знаходимо найбільш ймовірний клас
         const maxIndex = predictionsArray[0].indexOf(Math.max(...predictionsArray[0]));
         document.getElementById('result').innerText = `Найвірогідніше: Клас ${maxIndex} (Ймовірність: ${(predictionsArray[0][maxIndex] * 100).toFixed(2)}%)`;
     } catch (error) {
@@ -61,7 +70,7 @@ async function predictImage() {
     }
 }
 
-// Завантаження зображення
+// Завантаження зображення користувачем
 document.getElementById('image-upload').addEventListener('change', function(event) {
     const file = event.target.files[0];
     if (file) {
