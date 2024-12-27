@@ -1,13 +1,10 @@
 let model;
-let modelLoading = true;
 
-// Завантаження моделі
+// Завантаження моделі MobileNet
 async function loadModel() {
     try {
-        // Завантажуємо модель без модифікацій
-        model = await tf.loadLayersModel('https://serhii-dub.github.io/Model1/resnet50_tfjs_model/model.json');
+        model = await mobilenet.load();
         console.log('Модель успішно завантажена');
-        modelLoading = false;
         document.getElementById('predict-button').disabled = false;
         document.getElementById('result').innerText = 'Модель готова до прогнозування!';
     } catch (error) {
@@ -30,39 +27,24 @@ document.getElementById('image-upload').addEventListener('change', function(even
     }
 });
 
-// Прогнозування зображення
-async function predictImage() {
-    if (modelLoading) {
-        document.getElementById('result').innerText = 'Модель все ще завантажується...';
-        return;
-    }
-
+// Прогнозування
+document.getElementById('predict-button').addEventListener('click', async function() {
+    const imageElement = document.getElementById('image-preview');
+    
     if (!model) {
-        console.error('Модель не завантажена!');
         document.getElementById('result').innerText = 'Модель не завантажена!';
         return;
     }
 
-    const imageElement = document.getElementById('image-preview');
-    const imageTensor = tf.browser.fromPixels(imageElement)
-        .resizeNearestNeighbor([224, 224]) // Розмір для ResNet50
-        .toFloat()
-        .expandDims(0)
-        .div(tf.scalar(255)); // Нормалізація
-
     try {
-        // Отримуємо передбачення
-        const predictions = await model.predict(imageTensor).array();
-
-        // Обробляємо передбачення
-        const predictedIndex = predictions[0].indexOf(Math.max(...predictions[0]));
-
-        document.getElementById('result').innerText = `Передбачена категорія: ${predictedIndex}`;
+        const predictions = await model.classify(imageElement);
+        console.log('Результати прогнозу:', predictions);
+        document.getElementById('result').innerText = `Найвірогідніше: ${predictions[0].className} (${(predictions[0].probability * 100).toFixed(2)}%)`;
     } catch (error) {
-        console.error('Помилка передбачення:', error);
-        document.getElementById('result').innerText = 'Помилка передбачення!';
+        console.error('Помилка прогнозування:', error);
+        document.getElementById('result').innerText = 'Помилка прогнозування!';
     }
-}
+});
 
-// Завантаження моделі при старті сторінки
+// Завантажуємо модель при завантаженні сторінки
 window.onload = loadModel;
