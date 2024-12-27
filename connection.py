@@ -2,7 +2,7 @@ import os
 from git import Repo
 
 # Налаштування
-repo_name = "Model1"  # Ім'я репозиторію на GitHub
+repo_name = "Model1_IM-24"  # Ім'я репозиторію на GitHub
 github_username = "Serhii-Dub"  # Змініть на ваш логін GitHub
 github_url = f"https://github.com/Serhii-Dub/{repo_name}.git"
 local_path = os.path.abspath(".")  # Поточна папка, де знаходяться ваші файли
@@ -32,6 +32,13 @@ if not os.path.exists(os.path.join(local_path, ".git")):
 
 repo = Repo(local_path)
 
+# Створення README.md файлу, якщо його немає
+readme_path = os.path.join(local_path, "README.md")
+if not os.path.exists(readme_path):
+    print("Створення README.md файлу...")
+    with open(readme_path, "w") as readme_file:
+        readme_file.write(f"# {repo_name}\n")
+
 # Переведення на гілку main (якщо її ще немає)
 repo.git.branch("-M", "main")
 
@@ -40,7 +47,7 @@ if "origin" not in [remote.name for remote in repo.remotes]:
     print("Додавання віддаленого репозиторію...")
     repo.create_remote("origin", github_url)
 
-# Додавання всіх файлів у список
+# Додавання всіх файлів до репозиторію
 print("Додавання файлів до репозиторію...")
 repo.git.add(A=True)
 
