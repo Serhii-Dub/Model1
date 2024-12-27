@@ -4,8 +4,8 @@ let modelLoading = true;  // Змінна для перевірки, чи мод
 // Завантаження моделі
 async function loadModel() {
   try {
-    // Завантажуємо модель ResNet50 через TensorFlow.js, використовуючи tf.loadLayersModel()
-model = await tf.loadLayersModel('https://serhii-dub.github.io/Model1/resnet50_tfjs_model/model.json');
+    // Завантажуємо модель ResNet50 через TensorFlow.js
+    model = await tf.loadGraphModel('https://serhii-dub.github.io/Model1/resnet50_tfjs_model/model.json');
     console.log('Model Loaded');
     modelLoading = false;  // Модель завантажена
     document.getElementById('predict-button').disabled = false; // Дозволяємо передбачення
@@ -49,15 +49,15 @@ async function predictImage() {
     .resizeNearestNeighbor([224, 224])  // Розмір для ResNet50
     .toFloat()
     .expandDims(0)
-    .div(tf.scalar(255));
+    .div(tf.scalar(255));  // Нормалізація значень пікселів
 
   try {
     // Отримуємо передбачення
     const predictions = await model.predict(imageTensor);
-    
+
     // Обробка результатів передбачення
     const topClass = predictions.arraySync()[0];
-    const predictedLabel = topClass.indexOf(Math.max(...topClass));
+    const predictedLabel = topClass.indexOf(Math.max(...topClass));  // Отримуємо індекс найбільш вірогідного класу
 
     // Показуємо результат
     document.getElementById('result').innerText = `Передбачена категорія: ${predictedLabel}`;
