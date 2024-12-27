@@ -2,9 +2,9 @@ import os
 from git import Repo
 
 # Налаштування
-repo_name = "image-classifier"  # Ім'я репозиторію на GitHub
+repo_name = "Model1"  # Ім'я репозиторію на GitHub
 github_username = "Serhii-Dub"  # Змініть на ваш логін GitHub
-github_url = f"https://github.com/Serhii-Dub/Model1.git"
+github_url = f"https://github.com/Serhii-Dub/{repo_name}.git"
 local_path = os.path.abspath(".")  # Поточна папка, де знаходяться ваші файли
 commit_message = "Initial commit: Added Flask image classifier project"
 
@@ -32,7 +32,7 @@ if not os.path.exists(os.path.join(local_path, ".git")):
 
 repo = Repo(local_path)
 
-# Переведення на гілку main
+# Переведення на гілку main (якщо її ще немає)
 repo.git.branch("-M", "main")
 
 # Додавання віддаленого репозиторію
@@ -44,7 +44,7 @@ if "origin" not in [remote.name for remote in repo.remotes]:
 print("Додавання файлів до репозиторію...")
 repo.git.add(A=True)
 
-# Перевірка наявності комітів
+# Перевірка наявності комітів і створення першого коміту, якщо репозиторій порожній
 if not repo.head.is_valid():
     print("Ініціалізація репозиторію: створення початкового коміту...")
     repo.index.commit(commit_message)
