@@ -5,13 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ResNet50 TFJS</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Завантаження та прогнозування моделі ResNet50</h1>
-
-    <input type="file" id="file-input" accept="image/*">
-    <img id="input-image" style="max-width: 100%; display: none;">
-    <button onclick="predict()">Прогнозувати</button>
+    <div class="container">
+        <h1>Завантаження та прогнозування моделі ResNet49</h1>
+        
+        <input type="file" id="file-input" accept="image/*">
+        <img id="input-image" style="max-width: 100%; display: none;">
+        
+        <button id="predict-button" disabled onclick="predict()">Прогнозувати</button>
+        <div id="result"></div>
+    </div>
 
     <script src="script.js"></script>
 </body>
