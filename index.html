@@ -9,12 +9,19 @@
 </head>
 <body>
     <div class="container">
-        <h1>Завантаження та прогнозування моделі ResNet149</h1>
-        
-        <input type="file" id="file-input" accept="image/*">
+        <h1>Завантаження та прогнозування моделі ResNet50</h1>
+
+        <!-- Повідомлення про статус моделі -->
+        <div id="loading-message">Завантаження моделі...</div>
+
+        <!-- Поле вибору зображення -->
+        <input type="file" id="file-input" accept="image/*" disabled>
         <img id="input-image" style="max-width: 100%; display: none;">
-        
+
+        <!-- Кнопка для прогнозування -->
         <button id="predict-button" disabled onclick="predict()">Прогнозувати</button>
+
+        <!-- Результат прогнозу -->
         <div id="result"></div>
     </div>
 
